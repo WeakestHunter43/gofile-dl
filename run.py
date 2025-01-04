@@ -12,7 +12,7 @@ import time
 
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(asctime)s][%(funcName)20s()][%(levelname)-8s]: %(message)s",
+    format="%(message)s",  # Simplified format
     handlers=[
         logging.StreamHandler(),
     ],
