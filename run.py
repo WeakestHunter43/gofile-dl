@@ -6,6 +6,8 @@ from typing import Dict
 from pathvalidate import sanitize_filename
 import requests
 import hashlib
+import time
+    
 
 
 logging.basicConfig(
@@ -110,6 +112,7 @@ class GoFile(metaclass=GoFileMeta):
         else:
             logger.error(f"invalid parameters")
 
+
     def download(self, link: str, file: str, chunk_size: int = 8192):
         try:
             dir = os.path.dirname(file)
@@ -122,15 +125,19 @@ class GoFile(metaclass=GoFileMeta):
                     r.raise_for_status()
                     with open(file, "wb") as f:
                         content_length = int(r.headers["Content-Length"])
-                        progress_bar = ProgressBar(
-                            "Downloading", 0, math.ceil(content_length / chunk_size)
-                        )
+                        total_chunks = math.ceil(content_length / chunk_size)
+                        last_update_time = time.time()
+                        cur_chunk = 0
                         for chunk in r.iter_content(chunk_size=chunk_size):
                             f.write(chunk)
-                            progress_bar.print()
-                    logger.info(f"downloaded: {file} ({link})")
+                            cur_chunk += 1
+                            if time.time() - last_update_time >= 5 or cur_chunk == total_chunks:
+                                percentage = int(100 * cur_chunk // total_chunks)
+                                logger.info(f"{os.path.basename(file)} ({percentage}%)")
+                                last_update_time = time.time()
+                    logger.info(f"Downloaded: {file} ({link})")
         except Exception as e:
-            logger.error(f"failed to download ({e}): {file} ({link})")
+            logger.error(f"Failed to download ({e}): {file} ({link})")
 
 
 parser = argparse.ArgumentParser()
